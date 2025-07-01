@@ -69,90 +69,98 @@ Both buttons are connected with **pull-up resistors**.
 #include <avr/io.h>
 #include <util/delay.h>
 
-void command(int cmd);
-void data(char data);
-void forward();
-void reverse();
-void stop();
-void display(const char *p);
-
-// LCD command function
+// Function to send command to LCD
 void command(int cmd) {
-    PORTA = 0x02;  // RS = 0, E = 1
-    PORTC = cmd;
+    PORTA = 0x02;      // RS = 0 (command), E = 1
+    PORTC = cmd;       // Put command on PORTC
     _delay_ms(2);
-    PORTA = 0x00;  // E = 0
+    PORTA = 0x00;      // E = 0 (latch command)
     _delay_ms(2);
 }
 
-// LCD data function
+// Function to send data (character) to LCD
 void data(char data) {
-    PORTA = 0x03;  // RS = 1, E = 1
-    PORTC = data;
+    PORTA = 0x03;      // RS = 1 (data), E = 1
+    PORTC = data;      // Put data on PORTC
     _delay_ms(2);
-    PORTA = 0x01;  // E = 0
+    PORTA = 0x01;      // E = 0 (latch data)
     _delay_ms(2);
 }
 
-// Motor functions
-void forward() { PORTD = 0x1D; }
-void reverse() { PORTD = 0x2E; }
-void stop()    { PORTD = 0x00; }
+// Function to move motors forward
+void forward() {
+    PORTD = 0x1D;      // Set motor control pins to forward
+}
 
+// Function to move motors reverse
+void reverse() {
+    PORTD = 0x2E;      // Set motor control pins to reverse
+}
+
+// Function to stop motors
+void stop() {
+    PORTD = 0x00;      // All motor control pins low
+}
+
+// Function to display string on LCD
 void display(const char *p) {
-    while(*p != 0) {
-        data(*p);
-        p++;
+    while (*p != 0) {  // Loop until null character
+        data(*p);      // Send each character to LCD
+        p++;           // Move to next character
     }
 }
 
 void main(void) {
-    DDRD = 0xFF;
-    DDRB = 0x00;
-    DDRC = 0xFF;
-    DDRA = 0xFF;
+    DDRD = 0xFF;       // PORTD as output for motor control
+    DDRB = 0x00;       // PORTB as input for push buttons
+    DDRC = 0xFF;       // PORTC as output for LCD data
+    DDRA = 0xFF;       // PORTA as output for LCD control signals
 
-    _delay_ms(20);
+    _delay_ms(20);     // LCD power-on delay
 
-    command(0x38);
-    command(0x0E);
-    command(0x06);
-    command(0x01);
+    // LCD initialization
+    command(0x38);     // 8-bit mode, 2 lines, 5x7 matrix
+    command(0x0E);     // Display ON, cursor ON
+    command(0x06);     // Increment cursor
+    command(0x01);     // Clear display
 
     while (1) {
-        if ((PINB & 0x01) == 0) {
+        if ((PINB & 0x01) == 0) {  // Check if first button pressed (PB0)
             forward();
-            command(0x80);
+            command(0x80);          // Move cursor to start of first line
             display("FORWARD");
-            _delay_ms(200);
+            _delay_ms(200);        // Delay to show text
             stop();
-            command(0x01);
-        } else if ((PINB & 0x02) == 0) {
+            command(0x01);         // Clear display
+        } 
+        else if ((PINB & 0x02) == 0) { // Check if second button pressed (PB1)
             reverse();
-            command(0x80);
+            command(0x80);          // Move cursor to start of first line
             display("REVERSE");
-            _delay_ms(200);
+            _delay_ms(200);        // Delay to show text
             stop();
-            command(0x01);
-        } else {
-            stop();
+            command(0x01);         // Clear display
+        } 
+        else {
+            stop();  // Default state: motors stopped
         }
     }
 }
+
 
 ``` 
 ## 🗺️ Schematic
 
 ![Schematic](motor.png)
 
-## 🚀 How to Implement
-
+ ## 🚀 How to Implement
+ ```
 1️⃣ Write and compile the code using Atmel Studio or AVR GCC.
 2️⃣ Flash the hex file to ATmega32 using a programmer (e.g., USBasp).
 3️⃣ Connect the hardware as per schematic or simulate in Proteus.
 4️⃣ Press buttons to test forward and reverse actions.
 5️⃣ Watch real-time status on LCD.
-
+```
 ## 📝 License
 Open-source under MIT License. Feel free to use, modify, and share!
 
